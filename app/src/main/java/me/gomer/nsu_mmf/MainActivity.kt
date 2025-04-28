@@ -11,6 +11,10 @@ import me.gomer.nsu_mmf.databinding.ActivityMainBinding
 import me.gomer.nsu_mmf.second.SecondActivity
 
 
+//http://numbersapi.com/#random/trivia
+
+//https://newsapi.org/
+
 class MainActivity : AppCompatActivity() {
 
     private val binding: ActivityMainBinding by lazy {

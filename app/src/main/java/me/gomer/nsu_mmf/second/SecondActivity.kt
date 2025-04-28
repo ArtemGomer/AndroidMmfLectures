@@ -8,8 +8,14 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import me.gomer.nsu_mmf.MyApplication
 import me.gomer.nsu_mmf.R
 import me.gomer.nsu_mmf.databinding.ActivitySecondBinding
 import me.gomer.nsu_mmf.second.item_decoration.HorizontalPaddingItemDecoration
@@ -28,7 +34,10 @@ class SecondActivity : AppCompatActivity() {
 
     private val viewModel: SecondViewModel by viewModels<SecondViewModel>(
         factoryProducer = {
-            SecondViewModelFactory(mapper = SecondMapper())
+            SecondViewModelFactory(
+                mapper = SecondMapper(),
+                numberApi = (application as MyApplication).numberApi,
+            )
         }
     )
 
@@ -52,20 +61,26 @@ class SecondActivity : AppCompatActivity() {
             RecyclerView.VERTICAL,
             false
         )
-        binding.list.addItemDecoration(HorizontalPaddingItemDecoration(
-            rightPadding = 16,
-            leftPadding = 16,
-            viewTypes = listOf(R.layout.list_item)
-        ))
-        binding.list.addItemDecoration(VerticalPaddingItemDecoration(
-            topPadding = 16,
-            bottomPadding = 16,
-            viewTypes = listOf(R.layout.list_item)
-        ))
+        binding.list.addItemDecoration(
+            HorizontalPaddingItemDecoration(
+                rightPadding = 16,
+                leftPadding = 16,
+                viewTypes = listOf(R.layout.list_item)
+            )
+        )
+        binding.list.addItemDecoration(
+            VerticalPaddingItemDecoration(
+                topPadding = 16,
+                bottomPadding = 16,
+                viewTypes = listOf(R.layout.list_item)
+            )
+        )
 
-        viewModel.state.observe(this) { list ->
-            adapter.submitList(list)
-        }
+        viewModel.state
+            .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
+            .onEach { state ->
+                adapter.submitList(state.list)
+            }.launchIn(lifecycleScope)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
